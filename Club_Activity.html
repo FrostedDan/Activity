@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DES Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .quiz-container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #timer {
+      margin-bottom: 15px;
+    }
+
+    #time-bar-container {
+      width: 100%;
+      height: 10px;
+      background-color: #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 5px;
+    }
+
+    #time-bar {
+      height: 100%;
+      width: 100%;
+      background-color: #00d5ff;
+      transition: width 1s linear, background-color 0.5s ease;
+    }
+
+    #time-text {
+      font-size: 14px;
+      color: #333;
+      text-align: right;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    .option, .btn {
+      display: block;
+      background: #eee;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px 0;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .option:hover, .btn:hover {
+      background: #d3d3d3;
+    }
+
+    .option.correct {
+      background: #4caf50;
+      color: white;
+    }
+
+    .option.wrong {
+      background: #f44336;
+      color: white;
+    }
+
+    #leaderboard {
+      text-align: center;
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      padding: 5px 0;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz">
+  <!-- Start Screen -->
+  <div id="start-screen">
+    <h2>Enter Your Name to Start</h2>
+    <input type="text" id="username" placeholder="Your name..." />
+    <button class="btn" onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div id="quiz-screen" class="hidden">
+    <div id="timer">
+      <div id="time-bar-container">
+        <div id="time-bar"></div>
+      </div>
+      <div id="time-text">Time left: <span id="time">10</span>s</div>
+    </div>
+
+    <h2 id="question">DES</h2>
+    <div id="options"></div>
+  </div>
+</div>
+
+<script>
+  const quizData = [
+    {
+      question: "What is Computer?",                            //Code by Kurt Sioson, Revised by AI
+      options: [
+        "Interface Communication Technology",
+        "Integrated Computational Technology",
+        "Integrated and Communication Technology", 
+  
+        "Information and Communication Technology"
+      ],
+      answer: 3
+    },
+    {
+      question: "Which language runs in a web browser?",
+      options: ["Java", "C", "Python", "JavaScript"],
+      answer: 3
+    },
+    {
+      question: "What does CSS stand for?",
+      options: [
+        "Cascading Style Sheets",
+        "Computer Style Sheet",
+        "Creative Style System",
+        "Colorful Style Sheet"
+      ],
+      answer: 0
+    },
+    {
+      question: "What does CPU stand for?",
+      options: [
+        "Central Power Unit",
+        "Central Processing Unit",
+        "Computer Power Utility",
+        "Core Processor Unit"
+      ],
+      answer: 1
+    },
+    {
+      question: "Which of the following is not a cyber threat?",
+      options: ["Malware", "Firewall", "Hacking", "Phishing"],
+      answer: 1
+    },
+    {
+      question: "Which of the following is an example of system software?",
+      options: ["MS PowerPoint", "Windows 11", "Google Chrome", "Photoshop"],
+      answer: 1
+    },
+    {
+      question: "What does \"www\" stand for in a website address?",
+      options: [
+        "World Web Wide",
+        "Wide World Web",
+        "Web World Wide",
+        "World Wide Web"
+      ],
+      answer: 3
+    },
+    {
+      question: "Which of these is not a characteristic of ICT?",
+      options: [
+        "Easy Data Access",
+        "Fast Communication",
+        "Manual Typewriting",
+        "Online Learning"
+      ],
+      answer: 2
+    },
+    {
+      question: "Which hardware is volatile memory?",
+      options: ["RAM", "HDD", "SSD", "CD"],
+      answer: 0
+    },
+    {
+      question: "Which of these IP addresses is valid?",
+      options: ["192.168.1.256", "999.1.1.1", "300.100.50.25", "172.16.0.1"],
+      answer: 3
+    }
+  ];
+
+  let currentQuestion = 0;
+  let score = 0;
+  let timer;
+  let timeLeft = 10;
+  let userName = "";
+
+  const quizContainer = document.getElementById('quiz');
+  const startScreen = document.getElementById('start-screen');
+  const quizScreen = document.getElementById('quiz-screen');
+  const questionEl = document.getElementById('question');
+  const optionsEl = document.getElementById('options');
+  const timeEl = document.getElementById('time');
+  const timeBar = document.getElementById('time-bar');
+
+  function startQuiz() {
+    const nameInput = document.getElementById('username');
+    userName = nameInput.value.trim();
+    if (userName === "") {
+      alert("Please enter your name.");
+      return;
+    }
+    startScreen.classList.add("hidden");
+    quizScreen.classList.remove("hidden");
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    clearInterval(timer);
+    timeLeft = 10;
+    updateTimer();
+
+    const q = quizData[currentQuestion];
+    questionEl.textContent = q.question;
+    optionsEl.innerHTML = "";
+
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.classList.add("option");
+      btn.textContent = opt;
+      btn.onclick = () => {
+        clearInterval(timer);
+        checkAnswer(idx);
+      };
+      optionsEl.appendChild(btn);
+    });
+
+    timer = setInterval(() => {
+      timeLeft--;
+      updateTimer();
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        checkAnswer(null);
+      }
+    }, 1000);
+  }
+
+  function updateTimer() {
+    timeEl.textContent = timeLeft;
+    const progress = (timeLeft / 10) * 100;
+    timeBar.style.width = `${progress}%`;
+    timeBar.style.backgroundColor = timeLeft <= 3 ? "#f44336" : "#00d5ff";
+  }
+
+  function checkAnswer(selectedIndex) {
+    const correctIndex = quizData[currentQuestion].answer;
+    const buttons = document.querySelectorAll(".option");
+
+    buttons.forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === correctIndex) btn.classList.add("correct");
+      if (idx === selectedIndex && idx !== correctIndex) btn.classList.add("wrong");
+    });
+
+    if (selectedIndex === correctIndex) {
+      score++;
+    }
+
+    setTimeout(() => {
+      currentQuestion++;
+      if (currentQuestion < quizData.length) {
+        loadQuestion();
+      } else {
+        showScore();
+      }
+    }, 1000);
+  }
+
+  function showScore() {
+    saveScoreToLeaderboard(userName, score);
+
+    const leaderboard = getLeaderboard();
+
+    quizContainer.innerHTML = `
+      <h2>Quiz Completed!</h2>
+      <p><strong>${userName}</strong>, you scored ${score} out of ${quizData.length}</p>
+      <h3>Leaderboard</h3>
+      <div id="leaderboard">
+        <ul>
+          ${leaderboard.map((entry, i) => `<li>${i + 1}. ${entry.name} - ${entry.score}</li>`).join("")}
+        </ul>
+        <button class="btn" onclick="location.reload()">Play Again</button>
+      </div>
+    `;
+  }
+
+  function saveScoreToLeaderboard(name, score) {
+    const leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+    leaderboard.push({ name, score });
+    leaderboard.sort((a, b) => b.score - a.score);
+    localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5))); // keep top 5   
+  }
+
+  function getLeaderboard() {
+    return JSON.parse(localStorage.getItem("leaderboard")) || [];
+  }
+</script>
+
+</body>
+</html>
